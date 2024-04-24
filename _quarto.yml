@@ -1,0 +1,18 @@
+project:
+  type: book
+  output-dir: docs
+book:
+  title: AQUA-d Forum
+  subtitle: Sitzung 04 - Regression 01
+  author: Samuel Merk
+  chapters:
+  - index.qmd
+  - regression.qmd
+  - references.qmd
+bibliography: references.bib
+format:
+  html:
+    theme: cosmo
+    fontsize: .8em
+lang: de
+lightbox: false

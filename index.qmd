@@ -1,0 +1,10 @@
+# Willkommen 👋🏼{.unnumbered}
+
+Hier finden sich
+
+* Videos, 
+* Aufgaben,
+* Daten und
+* Code
+
+für die asynchrone Vorbereitung der Sitzung Regression 01 im AQUA-d Forum des SoSe 24. Ich bitte euch alle **vorab** das Kapitel **Einfache und multiple lineare Regression durchzuarbeiten**, also die Videos zu rezipieren, die Worked Out Examples durchzugehen und die Aufgaben zu bearbeiten.
