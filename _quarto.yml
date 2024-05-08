@@ -8,6 +8,7 @@ book:
   chapters:
   - index.qmd
   - regression.qmd
+  - regression_assumptions.qmd
   - references.qmd
 bibliography: references.bib
 format:

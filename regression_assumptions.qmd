@@ -1,0 +1,166 @@
+# Annahmen für die Inferenzstatistik (Regressionsdiagnostik)
+
+## Parameter, Effektstärken und Inferenzstatistiken
+Wir haben nun die Parametrisierung der multiplen linearen Regression kennengelernt und dazu die folgenden Parameter, Effektstärken und Inferenzstatistiken kennengelernt:
+
+* Parameter:
+    * Intercept der Regression $b_0$
+    * Slope der Regression $b_1$
+* Effektstärken:
+    * Slope der standardisierten Regression $\beta_1$
+    * Determinationskoeffizient $R^2$
+* Inferenzstatistiken:
+    * $p$-Werte für Parameter (Typische $H_0\text{: }\;b_i = 0$)
+    * $p$-Werte für $R^2$ (Typische $H_0\text{: }\;R^2 = 0$ oder $H_0\text{: }\;R^2_{Modell_1} = R^2_{Modell_2}$)
+    * $BF$-Werte für $R^2$ (Typische $H_0\text{: }\;R^2 = 0$ oder $H_0\text{: }\;R^2_{Modell_1} = R^2_{Modell_2}$)
+    * Konfidenzintervalle für Parameter
+    * Bayesian Credibility Intervalle für Parameter
+
+## Annahmen
+Die Verfahren zur Berechnung der Inferenzstatistiken treffen Annahmen über den datengenerierenden Mechanismus. Sind diese verletzt, kann man die Inferenzstatistiken dennoch berechnen, sie sind aber nicht mehr aussagekräftig - ähnlich wie man auch in einem nicht rechtwinkligen Dreieck $a^2 + b^2$ berechnen kann, diese Summe aber nicht $c^2$ ergibt. So wie man also vor der Anwendung des Satz des Pythagoras $a^2 + b^2 = c^2$ prüfen muss, ob das Dreick rechtwinklig ist, muss man vor der Berechnung der Inferenzstatistiken deren Voraussetzungen prüfen.
+
+Zur Definition der Voraussetzungen von inferenzstatistischen Verfahren wird meist zunächst ein Populationsmodell spezifiziert um dann zusätzliche Annahmen für die Schätzung anzugeben. Das Populationsmodell der multiplen linearen Regression lautet:
+
+$$
+\begin{aligned}
+Y=\;& E\left(Y \mid X_1, \ldots, X_k\right)+\varepsilon=\beta_0+\beta_1 \cdot X_1+\beta_2 \cdot X_2 \\
+& +\ldots+\beta_j \cdot X_j+\ldots+\beta_k \cdot X_k+\varepsilon
+\end{aligned}
+$$
+Dabei stellt $E\left(Y \mid X_1, \ldots, X_k\right)$ den bedingten Erwartungswert von Y dar.
+
+:::{.callout-important collapse=false appearance='default' icon=true}
+Für die Schätzung der Parameter wird meist zusätzlich angenommen:
+
+* Homoskedastizität: $\operatorname{Var}(Y \mid X)=\operatorname{Var}(\varepsilon \mid X)=\sigma_{\varepsilon}^2$. Die Streuung der Residuen muss also für verschiedene Prädiktorwerte konstant sein.
+* Bedingte Normalverteilung: $\varepsilon_i \sim N\left(\mu_i, \sigma_{i}^2\right)$. Die Residuen müssen normalverteilt sein
+* Unabhängigkeit der Residuen: $\varepsilon_i \sim \text{i.i.d.}$. Die Residuen »dürfen keine Information teilen«.
+:::
+
+Diese Annahmen sind nach dem Satz von Gauß Markov zu $\forall i: \varepsilon_i \sim\left(0, \sigma^2\right)$ abschwächbar. Da dies aber weniger anschaulich ist bleiben wir bei den erstgenannten Annahmen.
+
+## Diagnostik der Annahmen
+Wie diagnostiziert man aber nun inwiefern diese Annahmen für vorliegende Daten problematisch sind? Zunächst: Diese sog. Regressionsdiagnostik ist wesentlich komplexer und bedarf größerer Expertise als das Spezifizieren, Schätzen und Interpretieren der Modelle - Hilfe und Kontrolle durch kompetente Forscher:innen ist also ratsam.
+
+### Graphische und koeffizientenbasierte Diagnostik 
+Prinzipiell unterscheidet man zwischen graphischer und koeffizientenbasierter Regressionsdiagnostik. Bei ersterer versucht man aus geeigneten Grafiken die Einhaltung/Abweichung der Annahmen abzuschätzen - bei zweiterer berechnet man Koeffizienten welche die Abweichung von den Annahmen beschreiben.
+
+```{r}
+#| echo: false
+#| results: hide
+#| warning: false
+
+library(haven)
+library(tidyverse)
+```
+
+
+```{r}
+#| echo: false
+#| results: hide
+#| cache: true
+# Read Complete Data
+data_star <- read_spss("data/STAR_Students.sav")
+
+# Select Variables
+data_star_selected_variables <- 
+    data_star |> 
+    select(g4ptattn, g4ptmtrl, g4ptpers, g4ptlate, g4ptextr, g4ptdisc, 
+           g4ptdiss, g4ptattn, g4ptmtrl, g4ptpers, g4ptlate, g4ptextr, 
+           g4ptdisc, g4ptdiss, g8peattn, g8pmattn, g8pemtrl, g8pmmtrl, g8pepers, 
+           g8pmpers, g8pelate, g8pmlate, g8pemore, g8pmmore, g8pedisc, g8pmdisc, 
+           g8pediss, g8pmdiss,
+           g4schid, g4tmathss, g4readcomprehss,
+           g2classtype, g2tmathss, g2readbsraw, g2tchid, g2tyears,
+           g2ttrain, g3ttrain, g4ptvalu, g4ptinit,
+           g2surban, g3surban,
+           g3classtype, g3tmathss, g3readbsraw, g3tchid, g3tyears, 
+           g2selfconcraw, g3selfconcraw, g3classsize, g2classsize,
+           g4pteffr, g4ptinit, g3motivraw, g2motivraw,
+           g4tmathss, g4treadss, g3treadss, g2treadss) |> 
+    mutate(g4ptattn = as.numeric(as.factor(g4ptattn)),
+           g4ptmtrl = 6 - as.numeric(as.factor(g4ptmtrl)),
+           g4ptpers = as.numeric(as.factor(g4ptpers)),
+           g4ptlate = 6 - as.numeric(as.factor(g4ptlate)),
+           
+           g8peattn = as.numeric(as.factor(g8peattn)),
+           g8pemtrl = 6 - as.numeric(as.factor(g8pemtrl)),
+           g8pepers = as.numeric(as.factor(g8pepers)),
+           g8pelate = 6 - as.numeric(as.factor(g8pelate)),
+           
+           g8pmattn = as.numeric(as.factor(g8pmattn)),
+           g8pmmtrl = 6 - as.numeric(as.factor(g8pmmtrl)),
+           g8pmpers = as.numeric(as.factor(g8pmpers)),
+           g8pmlate = 6 - as.numeric(as.factor(g8pmlate)),
+           
+           g4ptmore = as.numeric(as.factor(g4ptextr)),
+           g4ptdisc = as.numeric(as.factor(g4ptdisc)),
+           g4ptdiss = as.numeric(as.factor(g4ptdiss)),
+           
+           g8pemore = as.numeric(as.factor(g8pemore)),
+           g8pedisc = as.numeric(as.factor(g8pedisc)),
+           g8pediss = as.numeric(as.factor(g8pediss)),
+           
+           g8pmmore = as.numeric(as.factor(g8pmmore)),
+           g8pmdisc = as.numeric(as.factor(g8pmdisc)),
+           g8pmdiss = as.numeric(as.factor(g8pmdiss)),
+           )|> 
+    rowwise() |> 
+    mutate(g4effort = mean(c_across(c(g4ptattn, g4ptmtrl, g4ptpers, g4ptlate)), 
+                           na.rm = T),
+           g8efforte = mean(c_across(c(g8peattn, g8pemtrl, g8pepers, g8pelate)), 
+                           na.rm = T),
+           g8effortm = mean(c_across(c(g8pmattn, g8pmmtrl, g8pmpers, g8pmlate)), 
+                           na.rm = T)) |> 
+    ungroup()
+
+write_sav(data_star_selected_variables, "data/data_star_selected_variables.sav")    
+
+# Aggregate classes according g3
+data_star_sampled <- 
+    data_star_selected_variables |> 
+    group_by(g3tchid) |> 
+    sample_n(1) |> 
+    mutate(g3classtype = case_when(g3classtype == 1 ~ "small",
+                                   g3classtype == 2 ~ "regular",
+                                   g3classtype == 3 ~ "regular_with_aid"),
+           g3size = ifelse(g3classtype == "small", "small", "not_small"))
+
+write_sav(data_star_sampled, "data/data_star_sampled.sav")
+```
+
+
+#### Graphische  Regressionsdiagnostik
+Zunächst plottet man eigentlich immer die Rohdaten und das geschätzte Modell.
+
+```{r}
+library(haven)
+library(tidyverse)
+
+# read the aggregated data
+data_star_g3aggregated <- read_spss("data/data_star_sampled.sav")
+
+# plot rawdata
+ggplot(data_star_g3aggregated,                       # the used data set
+       aes(g3classsize, g3tmathss)) +                # define x- and y-axis
+    geom_jitter() +                                  # add jittered points
+    geom_rug(position = position_jitter(), 
+             alpha = .2) +                           # add rug at margins
+    stat_smooth(se = F, method = "lm") +             # add linear smoother
+    theme_minimal()                                  # make appearance "clearer"
+```
+
+Das Paket `{performance}` liefert zudem weitere sehr heuristische Plots für die Graphische  Regressionsdiagnostik:
+```{r}
+#| fig-height: 12
+#| fig-width: 8
+library(performance)
+
+# Spezifikation und Schätzung des Modells
+mod00 <- lm(g3tmathss ~ g3classsize, 
+            data = data_star_g3aggregated)
+
+# Grafische Regressionsdiagostik
+check_model(mod00)
+```
+

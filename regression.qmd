@@ -125,7 +125,7 @@ ggplot(data_star_g3aggregated,                       # the used data set
     geom_jitter() +                                  # add jittered points
     geom_rug(position = position_jitter(), 
              alpha = .2) +                           # add rug at margins
-    stat_smooth(method = "linear") +                 # add linear smoother
+    stat_smooth(method = "linear", se = F) +                 # add linear smoother
     theme_minimal()                                  # make appearance "clearer"
 ```
 
