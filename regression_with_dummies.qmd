@@ -1,0 +1,95 @@
+# Regression mit Dummyvariablen
+Regressionsmodelle sind nicht nur dazu geeignet Zusammenhangshypothesen zu modellieren, sie können auch Gruppenunterschiede beschreiben und testen. Dazu verwendet man häufig die sog. Dummykodierung
+
+```{r}
+#| echo: false
+#| results: hide
+#| warning: false
+
+library(haven)
+library(tidyverse)
+library(equatiomatic)
+data_star_g3aggregated <- read_spss("data/data_star_sampled.sav")
+```
+
+## Erklärvideo
+<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/944106731?h=964fd7693a&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Dummycodierung"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+
+
+### Worked out Example I (dichotomer Prädiktor)
+Der STAR-Datensatz enthält die dichotome Variable `g3size` welche nur zwischen kleinen Klassen `"small"` und großen Klassen bzw. großen Klassen mit Hilfslehrkraft `"not_small"` unterscheidet.
+Trägt man diese Variable gegen die Klassengröße auf erhält man den folgenden Plot:
+```{r}
+data_star_g3aggregated |> 
+  ggplot(aes(g3size, g3classsize)) +
+  geom_jitter() +
+  theme_minimal()
+```
+Ist man nun an einem Vergleich der Mathematikleistung in den großen vs. den kleinen Klassen interessiert, kann man die Variable `g3size` als Prädiktor verwenden. Ein deskriptiver Plot sieht wie folgt aus:
+
+```{r}
+data_star_g3aggregated |> 
+  ggplot(aes(g3size, g3tmathss)) + 
+  geom_boxplot() +
+  geom_jitter() +
+  theme_minimal()
+```
+
+Verwendet man `g3size` als Prädiktor in `lm()` erstellt R automatisch die entsprechende Dummyvariable:
+
+```{r}
+mod04 <- lm(g3tmathss ~ g3size, data = data_star_g3aggregated)
+summary(mod04)
+```
+
+Dieser Output ist in die folgende Regressionsgleichung übersetzbar:
+$$
+\operatorname{\widehat{g3tmathss}} = 614.52 + 12.09(\operatorname{g3size}_{\operatorname{small}})
+$$
+Am Names des Prädiktors `g3sizesmall` kann man erkennen, dass die `lm()`-Funktion aus der Variable `g3size` eine Dummyvariable gemacht hat, die den Wert 0 hat, wenn `g3size == "not_small"` gilt (Referenzkategorie) und den Wert 1 hat, falls es sich um eine kleine Klasse handelt. 
+
+Am Output erkennt man nun, dass die großen Klassen im Durchschnitt `r mod04$coefficients["(Intercept)"]` Punkte erzielen und die die kleinen Klassen `r mod04$coefficients["g3sizesmall"]` Punkte mehr. Ist das nun ein großer oder kleiner Unterschied? Diese Frage kann man auf mehrere Arten beantworten: Man kann z.B. das $R^2$ betrachten oder man standardisiert (nur) die abhängige Variable. Geplottet sieht das dann so aus:
+
+```{r}
+data_star_g3aggregated |> 
+  ggplot(aes(g3size, scale(g3tmathss))) + 
+  geom_boxplot() +
+  geom_jitter() +
+  theme_minimal()
+```
+
+Man kann hier schon die Mittelwertsdifferenz in Standardabweichungen abschätzen, was ja dem Cohen's d entspricht.
+Das entsprechende Regressionsmodell liefert dieses ebenfalls:
+
+```{r}
+mod05 <- lm(scale(g3tmathss) ~ g3size, data = data_star_g3aggregated)
+summary(mod05)
+```
+
+Die Mittelwertsdifferenz (der Slope) liegt also bei `r mod05$coefficients["g3sizesmall"]`. Dieses Wert erhält man auch wenn man Cohen's d berechnet:
+```{r}
+library(effectsize)
+cohens_d(g3tmathss ~ g3size, data = data_star_g3aggregated)
+```
+
+Manchmal ergeben sich bei dieser Berechnung kleinste Unterschiede, je nach dem wie die Standardabweichungen der beiden Gruppen gemittelt (gepoolt) werden.
+
+
+### Worked out Example I (trichotomer Prädiktor)
+Möchte man die **drei** verschiedenen Gruppen des STAR-Experimentes miteinander vergleichen, setzt man in die `lm()` Funktion die trichotome Variable `g3classtype` als Prädiktor ein.
+
+```{r}
+mod06 <- lm(g3tmathss ~ g3classtype, data = data_star_g3aggregated)
+summary(mod06)
+```
+
+Man erhält nun im Output zwei Prädiktoren, da die trichotome Variable zu einer Referenzkategrie und zwei Dummyvariablen für die zwei Unterschiede der anderen beiden Gruppen zu dieser Referenzkategorie umkodiert wurde. Demnach ist also der Mittelwert in der Referenzkategorie (regular class) gleich dem Intercept `r mod06$coefficients["(Intercept)"]`, der Mittelwert in den kleinen Klassen unterscheidet sich um `r mod06$coefficients["g3classtypesmall"]` und der in Klassen mit Hilfslehrkraft um `r mod06$coefficients["g3classtyperegular_with_aid"]`.
+
+Um bei der Interpretation keine Fehler zu machen lohnt es sich immer die Mittelwerte nochmals klassisch gegenzurechnen:
+
+```{r}
+data_star_g3aggregated |> 
+  group_by(g3classtype) |> 
+  summarize(MWg3tmathss = mean(g3tmathss, na.rm = T))
+```
+

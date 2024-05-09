@@ -9,6 +9,7 @@ book:
   - index.qmd
   - regression.qmd
   - regression_assumptions.qmd
+  - regression_with_dummies.qmd
   - references.qmd
 bibliography: references.bib
 format:

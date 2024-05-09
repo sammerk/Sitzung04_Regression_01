@@ -99,8 +99,10 @@ data_star_sampled <-
     sample_n(1) |> 
     mutate(g3classtype = case_when(g3classtype == 1 ~ "small",
                                    g3classtype == 2 ~ "regular",
-                                   g3classtype == 3 ~ "regular_with_aid"),
-           g3size = ifelse(g3classtype == "small", "small", "not_small"))
+                                   g3classtype == 3 ~ "regular_with_aid",
+                                   T ~ NA),
+           g3size = ifelse(g3classtype == "small", "small", "not_small")) |> 
+           filter(!is.na(g3classtype))
 
 write_sav(data_star_sampled, "data/data_star_sampled.sav")
 ```
@@ -238,7 +240,7 @@ tab_model(
 )
 ```
 
-Dies ist tatsächlich der Fall. Der standardisierte Regressionskoeffizient sinkt von .45 auf .18.
+Dies ist tatsächlich der Fall. Der standardisierte Regressionskoeffizient sinkt von .35 auf .12.
 
 ## Aufgabe
 ::: {.panel-tabset}
