@@ -1,0 +1,232 @@
+# Übungen zur einfachen, multiplen und Dummyregession
+
+## Import der Daten
+Datengrundlagen soll weiterhin die STAR-Studie sein, wobei wir wieder ein Subset der Daten verwenden das jeweils nur eine:n Schüler:in pro Klasse enthält, um Abhängigkeiten der Residuen zu vermeiden `r xfun::embed_file("data/data_star_sampled.sav", "data_star_sampled.sav", "(Datensatz)")`.
+```{r}
+#| echo: true
+#| results: hide
+#| warning: false
+
+library(tinytable)   # für schöne Tabellen
+library(BayesFactor) # für BFs
+library(ggdag)       # für Kausaldiagramme
+library(dagitty)     # für Kausale Relationierungen
+library(ggforce)     # für Sinaplots
+library(haven)       # für den Import
+library(sjPlot)      # für die Regressionstabellen
+library(performance) # für die Plots zur Regressionsidagnostik
+library(tidyverse)   # für das Data Wrangling und Plotting
+
+# Import der Daten
+data_star_g3sampled <- read_spss("data/data_star_sampled.sav")
+```
+
+## Übung 1: Versetzungsempfehlung
+::: {.panel-tabset}
+
+### Aufgabe
+In dieser Aufgabe wollen wir uns anschauen ob und wenn ja wie viel sich Drittklässler mit und ohne Versetzungsempfehlung in der Mathematikleistung `g3tmathss` von einander unterscheiden. Die Versetzungsempfehlung steckt in der Variable `g3promote` und hat die folgenden Ausprägungen und Belegungen:
+```{r}
+data_star_g3sampled |> 
+  # split dataset according to the value of g3promote
+  group_by(g3promote) |> 
+  # summarize each data set separately and combine the results
+  summarize(count = n(),
+            mean_per_g3promote = mean(g3tmathss, na.rm = T))
+```
+
+:::{.callout-warning collapse=false appearance='default' icon=true}
+Achtung am Output `<dbl+lbl>` kann man erkennen dass die nominale Variable der Versetzung als metrische Variable kodiert ist!
+:::
+
+### Lösungshinweis I
+Da die Variable nur zwei Ausprägungen hat, kann man sie als Dummyprädiktor verwenden. Ein entsprechender Plot sieht wie folgt aus:
+```{r}
+data_star_g3sampled |> 
+  ggplot(aes(as.factor(g3promote), g3tmathss)) +
+  geom_boxplot() +
+  geom_jitter() + 
+  theme_minimal()
+```
+
+
+### Lösungshinweis II
+```{r}
+# unstandardisiertes Modell
+mod07 <- lm(g3tmathss ~ as.factor(g3promote), data = data_star_g3sampled)
+
+# Print des standardisierten und unstandardisierten Modells
+tab_model(mod07, show.std = T)
+```
+
+
+
+### Lösungshinweis III    
+Der standardisierte Mittelwertsunterschied ist mit $\beta_1 >> .7$ klar ein großer Effekt. Trotz der geringen Anzahl an Datenpunkten fällt dieser zudem signifikant aus.
+
+### Regressionsdiagnostik
+Um die Einhaltung der Voraussetzungen zu diagnostizieren helfen die folgenden grafischen Darstellungen.
+```{r}
+#| fig-height: 12
+#| fig-width: 8
+check_model(mod07)
+```
+Posterior Predictive Checks, Linearität & einflussreiche Datenpunkte scheinen unauffällig zu sein. Die Varianzhomogenität ist auf den ersten Blick aufgrund der unterschiedlich vielen Datenpunkte schwer zu beurteilen. Berechnet man aber die Varianz je Gruppe 
+```{r}
+data_star_g3sampled |> 
+  # split dataset according to the value of g3promote
+  group_by(g3promote) |> 
+  # compute sd for each data set separately 
+  summarize(sd_per_g3promote = sd(g3tmathss, na.rm = T))
+```
+stellt man nur eine Abweichung von weniger als 10% fest.
+
+Die Residuen scheinen allerdings für die großen Werte schon substantiell von der Normalverteilung abzuweichen. Da die Stichprobengröße in einer Gruppe zudem eher klein ist würde ich den p-Wert mit Vorsicht genießen. Typische alternative Modellierungen sind z.B. in [@pek2018] zu finden.
+Sehr einfach ist es z.B. die `signed_rank()` der AV zu berechnen, was typischerweise ab $N > 11$ robust ist [@].
+
+```{r}
+signed_rank = function(x) sign (x) * rank (abs (x))
+mod08 <- lm(signed_rank(g3tmathss) ~ as.factor(g3promote), data = data_star_g3sampled)
+summary(mod08)
+```
+
+Auch hier ist der (unstandardisierte und transformierte, daher nicht gut interpretierbare Unterschied) signifikant.
+:::
+
+
+
+
+## Übung 2
+::: {.panel-tabset}
+
+### Aufgabe
+Angenommen eine Forscherin interessiert sich für das Zusammenspiel von sozioökonomischem Status und dem Effekt der Klassengröße. Der STAR-Datensatz enthält dichotome Variablen, die "free or reduced lunch" indizieren.
+Damit können wir folgende Forschungsfragen beantworten:
+
+* Gibt eine soziale Disparität in der Mathematikleistung?
+* Wie fällt diese Disparität nach Adjustierung um die Vorjahrestestleistung aus?
+* Unterscheiden sich diese Disparitäten in kleinen/großen Klassen (Moderatoreffekt)?
+
+
+### Lösung FF 1
+Um die soziale Disparität mit dem Dummyprädiktor zu modellieren, können wir zunächst ein unstandardisiertes Modell spezifizieren, nachdem wir uns die Rohdaten angeschaut haben
+```{r}
+# look at the raw data
+ggplot(data_star_g3sampled,
+       aes(g3freelunch, g3tmathss, group = g3freelunch)) +
+  geom_violin() +
+  geom_sina() +
+  stat_summary(fun.data ="mean_sdl", 
+               fun.args = list(mult = 1),
+               color = "#8cd000") +
+  theme_minimal()
+
+# fit a unstandardized model
+mod09 <- lm(g3tmathss ~ g3freelunch, data = data_star_g3sampled)
+summary(mod09)
+```
+
+Das $R^2$ deutet bereits auf einen substantiellen Effekt hin, welchen man nach Standardisierung der y-Achse auch im Slope ($\approx \text{Cohen's d}$) sehen kann.
+```{r}
+mod10 <- lm(scale(g3tmathss) ~ g3freelunch, data = data_star_g3sampled)
+summary(mod10)
+```
+
+In der Diagnostik sind die Posterior Predictives OK, gleichzeitig die Normalität der Residuen in den Randbereichen deutlich verletzt
+```{r}
+#| fig-height: 12
+#| fig-width: 8
+check_model(mod09)
+```
+
+Angesichts der Stichprobengröße sollte das aufgrund des zentralen Grenzwertsatzes unproblematisch sein.
+
+### Lösung FF2
+```{r}
+mod11 <- lm(g3tmathss ~ g3freelunch + g2tmathss, data = data_star_g3sampled)
+tab_model(mod09, mod11, show.std = T, show.ci = F)
+```
+
+Der nicht-signifikante p-Wert in `mod11` ist als inkonklusiv zu interpretieren - es ist unklar ob Evidenz für die Abwesenheit eines Effekts vorliegt oder die Power/Stichprobe nicht groß genug für Detektion eines Effekts.
+Klar ist jedoch, dass  `g3freelunch` und `g2tmathss` deutlich korrelieren müssen.
+
+Ein Bayes Faktor der im Prinzip zwischen Evidence of Absence und Absence of Evidence unterscheiden kann ist auch inkonklusiv:
+```{r}
+# Bayes Factor for mod09 vs. mod11
+lmBF(g3tmathss ~ g3freelunch + g2tmathss, 
+     data = data_star_g3sampled |> select(g3tmathss, g2tmathss, g3freelunch) |> na.omit()) /
+  lmBF(g3tmathss ~ g2tmathss, 
+     data = data_star_g3sampled |> select(g3tmathss, g2tmathss, g3freelunch) |> na.omit())
+```
+
+:::{.callout-tip collapse=false appearance='default' icon=true}
+## Eure Interpretation?
+Wie interpretiert ihr die Ergebnisse? Welche kausale Relationierung von 
+
+* `l2` (learning behavior in Jahr 2)
+* `l3` (learning behavior in Jahr 3)
+* `a2` (achievement in Jahr 2)
+* `a2` (achievement in Jahr 2)
+* `fl` (free lunch)
+
+haltet ihr theoretisch für plausible und im Einklang mit den Daten? Im folgende ein Beispiel zur Inspiration
+
+```{r}
+# Denkbare kausale Relationierung
+dag <- dagitty("dag {
+    l2 <- fl -> l3
+    l2 -> a2
+    a2 -> l3 -> a3
+    l2 -> l3
+    fl [exposure]
+    a3 [outcome]
+    l2 [unobserved]
+    l3 [unobserved]
+  }")
+
+tidy_ggdag <- tidy_dagitty(dag)
+
+ggdag(tidy_ggdag) +
+  theme_dag()
+```
+
+:::
+
+
+### Lösung FF3
+Für eine Antwort auf FF3 könnte man neue Dummyvariablen anlegen, die indizieren ob für eine Schüler:in 
+
+* freelunch & kleine Klasse
+* freelunch & große Klasse
+* kein freelunch & große Klasse
+
+gilt. *kein freelunch & kleine Klasse* wird dann zur Referenzkategorie.
+
+```{r}
+data_ff3 <- data_star_g3sampled |> 
+  mutate(freeL_smallCl = ifelse(g3freelunch == 1 & g3size == "small", 1, 0),
+         freeL_notsmallCl = ifelse(g3freelunch == 1 & g3size != "small", 1, 0),
+         notfreeL_notsmallCl = ifelse(g3freelunch != 1 & g3size != "small", 1, 0))
+
+# check recoding
+data_ff3 |>
+  select(g3freelunch, g3size, freeL_smallCl, freeL_notsmallCl, 
+         notfreeL_notsmallCl) |> 
+  distinct() |> 
+  tt()
+```
+
+Fittet man nun ein Modell mit diesen Prädiktoren ergibt sich folgendes Bild:
+```{r}
+mod12 <- lm(g3tmathss ~ freeL_smallCl + freeL_notsmallCl + notfreeL_notsmallCl,
+            data = data_ff3)
+tab_model(mod12, show.std = T, show.ci = F)
+```
+
+:::{.callout-tip collapse=false appearance='default' icon=true}
+## Eure Interpretation?
+Wie interpretiert ihr die Ergebnisse?
+:::
+
+
+:::

@@ -53,7 +53,9 @@ data_star_selected_variables <-
            g3classtype, g3tmathss, g3readbsraw, g3tchid, g3tyears, 
            g2selfconcraw, g3selfconcraw, g3classsize, g2classsize,
            g4pteffr, g4ptinit, g3motivraw, g2motivraw,
-           g4tmathss, g4treadss, g3treadss, g2treadss) |> 
+           g4tmathss, g4treadss, g3treadss, g2treadss,
+           g1promote, g2promote, g3promote,
+           g1freelunch, g2freelunch, g3freelunch) |> 
     mutate(g4ptattn = as.numeric(as.factor(g4ptattn)),
            g4ptmtrl = 6 - as.numeric(as.factor(g4ptmtrl)),
            g4ptpers = as.numeric(as.factor(g4ptpers)),
@@ -92,7 +94,7 @@ data_star_selected_variables <-
 
 write_sav(data_star_selected_variables, "data/data_star_selected_variables.sav")    
 
-# Aggregate classes according g3
+# select student per class according g3
 data_star_sampled <- 
     data_star_selected_variables |> 
     group_by(g3tchid) |> 
@@ -119,10 +121,10 @@ library(sjPlot)
 library(bayestestR)
 
 # read the aggregated data
-data_star_g3aggregated <- read_spss("data/data_star_sampled.sav")
+data_star_g3sampled <- read_spss("data/data_star_sampled.sav")
 
 # plot rawdata
-ggplot(data_star_g3aggregated,                       # the used data set
+ggplot(data_star_g3sampled,                       # the used data set
        aes(g3classsize, g3tmathss)) +                # define x- and y-axis
     geom_jitter() +                                  # add jittered points
     geom_rug(position = position_jitter(), 
@@ -136,7 +138,7 @@ Um nun eine einfache lineare Regression zu schätzen, verwendet man in R die `lm
 
 ```{r}
 mod00 <- lm(g3tmathss ~ g3classsize, 
-            data = data_star_g3aggregated)
+            data = data_star_g3sampled)
 ```
 
 Eine Übersicht über das Modell bekommt man, wenn man das Objekt `mod00` der der Funktion `summary()` übergibt.
@@ -169,7 +171,7 @@ Eine standardisierte lineare Regression setzt wie im Video erklärt voraus, dass
 
 ```{r}
 mod01 <- lm(scale(g3tmathss) ~ scale(g3classsize), 
-            data = data_star_g3aggregated |> 
+            data = data_star_g3sampled |> 
                 # filter rows if g3tmathss or g3classsize is NA
                 filter(!(is.na(g3tmathss) | is.na(g3classsize))))
 summary(mod01)

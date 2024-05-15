@@ -64,7 +64,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./references.html" rel="next">
+<link href="./Übung_Sitzung_Regression_II.html" rel="next">
 <link href="./regression_assumptions.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -195,6 +195,12 @@ window.Quarto = {
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
+  <a href="./Übung_Sitzung_Regression_II.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Übungen zur einfachen, multiplen und Dummyregession</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
   <a href="./references.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Literatur</span></a>
   </div>
@@ -251,7 +257,7 @@ window.Quarto = {
 <h3 data-number="4.1.1" class="anchored" data-anchor-id="worked-out-example-i-dichotomer-prädiktor"><span class="header-section-number">4.1.1</span> Worked out Example I (dichotomer Prädiktor)</h3>
 <p>Der STAR-Datensatz enthält die dichotome Variable <code>g3size</code> welche nur zwischen kleinen Klassen <code>"small"</code> und großen Klassen bzw. großen Klassen mit Hilfslehrkraft <code>"not_small"</code> unterscheidet. Trägt man diese Variable gegen die Klassengröße auf erhält man den folgenden Plot:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data_star_g3aggregated <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>data_star_g3sampled <span class="sc">|&gt;</span> </span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(g3size, g3classsize)) <span class="sc">+</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>() <span class="sc">+</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -265,17 +271,17 @@ window.Quarto = {
 </div>
 <p>Ist man nun an einem Vergleich der Mathematikleistung in den großen vs.&nbsp;den kleinen Klassen interessiert, kann man die Variable <code>g3size</code> als Prädiktor verwenden. Ein deskriptiver Plot sieht wie folgt aus:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data_star_g3aggregated <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data_star_g3sampled <span class="sc">|&gt;</span> </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(g3size, g3tmathss)) <span class="sc">+</span> </span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>() <span class="sc">+</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: Removed 33 rows containing non-finite outside the scale range
+<pre><code>Warning: Removed 41 rows containing non-finite outside the scale range
 (`stat_boxplot()`).</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: Removed 33 rows containing missing values or values outside the scale range
+<pre><code>Warning: Removed 41 rows containing missing values or values outside the scale range
 (`geom_point()`).</code></pre>
 </div>
 <div class="cell-output-display">
@@ -288,46 +294,46 @@ window.Quarto = {
 </div>
 <p>Verwendet man <code>g3size</code> als Prädiktor in <code>lm()</code> erstellt R automatisch die entsprechende Dummyvariable:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mod04 <span class="ot">&lt;-</span> <span class="fu">lm</span>(g3tmathss <span class="sc">~</span> g3size, <span class="at">data =</span> data_star_g3aggregated)</span>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mod04 <span class="ot">&lt;-</span> <span class="fu">lm</span>(g3tmathss <span class="sc">~</span> g3size, <span class="at">data =</span> data_star_g3sampled)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod04)</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = g3tmathss ~ g3size, data = data_star_g3aggregated)
+lm(formula = g3tmathss ~ g3size, data = data_star_g3sampled)
 
 Residuals:
-     Min       1Q   Median       3Q      Max 
--120.222  -29.722   -2.356   27.144  157.644 
+    Min      1Q  Median      3Q     Max 
+-96.669 -25.645  -4.669  28.331 160.380 
 
 Coefficients:
             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)  616.356      3.269 188.539   &lt;2e-16 ***
-g3sizesmall    9.866      5.070   1.946   0.0526 .  
+(Intercept)  613.620      2.950 208.014   &lt;2e-16 ***
+g3sizesmall    9.049      4.550   1.989   0.0476 *  
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 43.49 on 301 degrees of freedom
-  (33 observations deleted due to missingness)
-Multiple R-squared:  0.01243,   Adjusted R-squared:  0.009146 
-F-statistic: 3.788 on 1 and 301 DF,  p-value: 0.05256</code></pre>
+Residual standard error: 38.57 on 293 degrees of freedom
+  (41 observations deleted due to missingness)
+Multiple R-squared:  0.01332,   Adjusted R-squared:  0.009954 
+F-statistic: 3.956 on 1 and 293 DF,  p-value: 0.04764</code></pre>
 </div>
 </div>
 <p>Dieser Output ist in die folgende Regressionsgleichung übersetzbar: <span class="math display">\[
 \operatorname{\widehat{g3tmathss}} = 614.52 + 12.09(\operatorname{g3size}_{\operatorname{small}})
 \]</span> Am Names des Prädiktors <code>g3sizesmall</code> kann man erkennen, dass die <code>lm()</code>-Funktion aus der Variable <code>g3size</code> eine Dummyvariable gemacht hat, die den Wert 0 hat, wenn <code>g3size == "not_small"</code> gilt (Referenzkategorie) und den Wert 1 hat, falls es sich um eine kleine Klasse handelt.</p>
-<p>Am Output erkennt man nun, dass die großen Klassen im Durchschnitt 616.3559322 Punkte erzielen und die die kleinen Klassen 9.86629 Punkte mehr. Ist das nun ein großer oder kleiner Unterschied? Diese Frage kann man auf mehrere Arten beantworten: Man kann z.B. das <span class="math inline">\(R^2\)</span> betrachten oder man standardisiert (nur) die abhängige Variable. Geplottet sieht das dann so aus:</p>
+<p>Am Output erkennt man nun, dass die großen Klassen im Durchschnitt 613.619883 Punkte erzielen und die die kleinen Klassen 9.0494718 Punkte mehr. Ist das nun ein großer oder kleiner Unterschied? Diese Frage kann man auf mehrere Arten beantworten: Man kann z.B. das <span class="math inline">\(R^2\)</span> betrachten oder man standardisiert (nur) die abhängige Variable. Geplottet sieht das dann so aus:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>data_star_g3aggregated <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>data_star_g3sampled <span class="sc">|&gt;</span> </span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(g3size, <span class="fu">scale</span>(g3tmathss))) <span class="sc">+</span> </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_jitter</span>() <span class="sc">+</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: Removed 33 rows containing non-finite outside the scale range
+<pre><code>Warning: Removed 41 rows containing non-finite outside the scale range
 (`stat_boxplot()`).</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning: Removed 33 rows containing missing values or values outside the scale range
+<pre><code>Warning: Removed 41 rows containing missing values or values outside the scale range
 (`geom_point()`).</code></pre>
 </div>
 <div class="cell-output-display">
@@ -340,41 +346,41 @@ F-statistic: 3.788 on 1 and 301 DF,  p-value: 0.05256</code></pre>
 </div>
 <p>Man kann hier schon die Mittelwertsdifferenz in Standardabweichungen abschätzen, was ja dem Cohen’s d entspricht. Das entsprechende Regressionsmodell liefert dieses ebenfalls:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mod05 <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">scale</span>(g3tmathss) <span class="sc">~</span> g3size, <span class="at">data =</span> data_star_g3aggregated)</span>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>mod05 <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">scale</span>(g3tmathss) <span class="sc">~</span> g3size, <span class="at">data =</span> data_star_g3sampled)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod05)</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = scale(g3tmathss) ~ g3size, data = data_star_g3aggregated)
+lm(formula = scale(g3tmathss) ~ g3size, data = data_star_g3sampled)
 
 Residuals:
     Min      1Q  Median      3Q     Max 
--2.7515 -0.6803 -0.0539  0.6212  3.6080 
+-2.4935 -0.6615 -0.1204  0.7308  4.1369 
 
 Coefficients:
             Estimate Std. Error t value Pr(&gt;|t|)  
-(Intercept) -0.09390    0.07482  -1.255   0.2104  
-g3sizesmall  0.22581    0.11603   1.946   0.0526 .
+(Intercept) -0.09812    0.07609  -1.289   0.1982  
+g3sizesmall  0.23342    0.11736   1.989   0.0476 *
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 0.9954 on 301 degrees of freedom
-  (33 observations deleted due to missingness)
-Multiple R-squared:  0.01243,   Adjusted R-squared:  0.009146 
-F-statistic: 3.788 on 1 and 301 DF,  p-value: 0.05256</code></pre>
+Residual standard error: 0.995 on 293 degrees of freedom
+  (41 observations deleted due to missingness)
+Multiple R-squared:  0.01332,   Adjusted R-squared:  0.009954 
+F-statistic: 3.956 on 1 and 293 DF,  p-value: 0.04764</code></pre>
 </div>
 </div>
-<p>Die Mittelwertsdifferenz (der Slope) liegt also bei 0.2258091. Dieses Wert erhält man auch wenn man Cohen’s d berechnet:</p>
+<p>Die Mittelwertsdifferenz (der Slope) liegt also bei 0.2334241. Dieses Wert erhält man auch wenn man Cohen’s d berechnet:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(effectsize)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cohens_d</span>(g3tmathss <span class="sc">~</span> g3size, <span class="at">data =</span> data_star_g3aggregated)</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cohens_d</span>(g3tmathss <span class="sc">~</span> g3size, <span class="at">data =</span> data_star_g3sampled)</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: Missing values detected. NAs dropped.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Cohen's d |        95% CI
--------------------------
--0.23     | [-0.46, 0.00]
+<pre><code>Cohen's d |         95% CI
+--------------------------
+-0.23     | [-0.47,  0.00]
 
 - Estimated using pooled SD.</code></pre>
 </div>
@@ -385,44 +391,44 @@ F-statistic: 3.788 on 1 and 301 DF,  p-value: 0.05256</code></pre>
 <h3 data-number="4.1.2" class="anchored" data-anchor-id="worked-out-example-i-trichotomer-prädiktor"><span class="header-section-number">4.1.2</span> Worked out Example I (trichotomer Prädiktor)</h3>
 <p>Möchte man die <strong>drei</strong> verschiedenen Gruppen des STAR-Experimentes miteinander vergleichen, setzt man in die <code>lm()</code> Funktion die trichotome Variable <code>g3classtype</code> als Prädiktor ein.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>mod06 <span class="ot">&lt;-</span> <span class="fu">lm</span>(g3tmathss <span class="sc">~</span> g3classtype, <span class="at">data =</span> data_star_g3aggregated)</span>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>mod06 <span class="ot">&lt;-</span> <span class="fu">lm</span>(g3tmathss <span class="sc">~</span> g3classtype, <span class="at">data =</span> data_star_g3sampled)</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(mod06)</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
-lm(formula = g3tmathss ~ g3classtype, data = data_star_g3aggregated)
+lm(formula = g3tmathss ~ g3classtype, data = data_star_g3sampled)
 
 Residuals:
-     Min       1Q   Median       3Q      Max 
--120.222  -29.566   -2.222   27.191  157.293 
+    Min      1Q  Median      3Q     Max 
+-96.669 -25.882  -4.669  27.905 159.905 
 
 Coefficients:
                             Estimate Std. Error t value Pr(&gt;|t|)    
-(Intercept)                 615.9103     4.9327 124.863   &lt;2e-16 ***
-g3classtyperegular_with_aid   0.7968     6.5956   0.121    0.904    
-g3classtypesmall             10.3120     6.2764   1.643    0.101    
+(Intercept)                 614.0946     4.4918 136.716   &lt;2e-16 ***
+g3classtyperegular_with_aid  -0.8369     5.9639  -0.140    0.889    
+g3classtypesmall              8.5748     5.6760   1.511    0.132    
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-Residual standard error: 43.56 on 300 degrees of freedom
-  (33 observations deleted due to missingness)
-Multiple R-squared:  0.01248,   Adjusted R-squared:  0.005892 
-F-statistic: 1.895 on 2 and 300 DF,  p-value: 0.1521</code></pre>
+Residual standard error: 38.64 on 292 degrees of freedom
+  (41 observations deleted due to missingness)
+Multiple R-squared:  0.01339,   Adjusted R-squared:  0.00663 
+F-statistic: 1.981 on 2 and 292 DF,  p-value: 0.1398</code></pre>
 </div>
 </div>
-<p>Man erhält nun im Output zwei Prädiktoren, da die trichotome Variable zu einer Referenzkategrie und zwei Dummyvariablen für die zwei Unterschiede der anderen beiden Gruppen zu dieser Referenzkategorie umkodiert wurde. Demnach ist also der Mittelwert in der Referenzkategorie (regular class) gleich dem Intercept 615.9102564, der Mittelwert in den kleinen Klassen unterscheidet sich um 10.3119658 und der in Klassen mit Hilfslehrkraft um 0.7968143.</p>
+<p>Man erhält nun im Output zwei Prädiktoren, da die trichotome Variable zu einer Referenzkategrie und zwei Dummyvariablen für die zwei Unterschiede der anderen beiden Gruppen zu dieser Referenzkategorie umkodiert wurde. Demnach ist also der Mittelwert in der Referenzkategorie (regular class) gleich dem Intercept 614.0945946, der Mittelwert in den kleinen Klassen unterscheidet sich um 8.5747602 und der in Klassen mit Hilfslehrkraft um -0.8368626.</p>
 <p>Um bei der Interpretation keine Fehler zu machen lohnt es sich immer die Mittelwerte nochmals klassisch gegenzurechnen:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>data_star_g3aggregated <span class="sc">|&gt;</span> </span>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>data_star_g3sampled <span class="sc">|&gt;</span> </span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(g3classtype) <span class="sc">|&gt;</span> </span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">MWg3tmathss =</span> <span class="fu">mean</span>(g3tmathss, <span class="at">na.rm =</span> T))</span></code><button title="In die Zwischenablage kopieren" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 2
   g3classtype      MWg3tmathss
   &lt;chr&gt;                  &lt;dbl&gt;
-1 regular                 616.
-2 regular_with_aid        617.
-3 small                   626.</code></pre>
+1 regular                 614.
+2 regular_with_aid        613.
+3 small                   623.</code></pre>
 </div>
 </div>
 
@@ -858,8 +864,8 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./references.html" class="pagination-link" aria-label="Literatur">
-        <span class="nav-page-text">Literatur</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./Übung_Sitzung_Regression_II.html" class="pagination-link" aria-label="Übungen zur einfachen, multiplen und Dummyregession">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Übungen zur einfachen, multiplen und Dummyregession</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

@@ -9,7 +9,7 @@ Regressionsmodelle sind nicht nur dazu geeignet Zusammenhangshypothesen zu model
 library(haven)
 library(tidyverse)
 library(equatiomatic)
-data_star_g3aggregated <- read_spss("data/data_star_sampled.sav")
+data_star_g3sampled <- read_spss("data/data_star_sampled.sav")
 ```
 
 ## Erklärvideo
@@ -20,7 +20,7 @@ data_star_g3aggregated <- read_spss("data/data_star_sampled.sav")
 Der STAR-Datensatz enthält die dichotome Variable `g3size` welche nur zwischen kleinen Klassen `"small"` und großen Klassen bzw. großen Klassen mit Hilfslehrkraft `"not_small"` unterscheidet.
 Trägt man diese Variable gegen die Klassengröße auf erhält man den folgenden Plot:
 ```{r}
-data_star_g3aggregated |> 
+data_star_g3sampled |> 
   ggplot(aes(g3size, g3classsize)) +
   geom_jitter() +
   theme_minimal()
@@ -28,7 +28,7 @@ data_star_g3aggregated |>
 Ist man nun an einem Vergleich der Mathematikleistung in den großen vs. den kleinen Klassen interessiert, kann man die Variable `g3size` als Prädiktor verwenden. Ein deskriptiver Plot sieht wie folgt aus:
 
 ```{r}
-data_star_g3aggregated |> 
+data_star_g3sampled |> 
   ggplot(aes(g3size, g3tmathss)) + 
   geom_boxplot() +
   geom_jitter() +
@@ -38,7 +38,7 @@ data_star_g3aggregated |>
 Verwendet man `g3size` als Prädiktor in `lm()` erstellt R automatisch die entsprechende Dummyvariable:
 
 ```{r}
-mod04 <- lm(g3tmathss ~ g3size, data = data_star_g3aggregated)
+mod04 <- lm(g3tmathss ~ g3size, data = data_star_g3sampled)
 summary(mod04)
 ```
 
@@ -51,7 +51,7 @@ Am Names des Prädiktors `g3sizesmall` kann man erkennen, dass die `lm()`-Funkti
 Am Output erkennt man nun, dass die großen Klassen im Durchschnitt `r mod04$coefficients["(Intercept)"]` Punkte erzielen und die die kleinen Klassen `r mod04$coefficients["g3sizesmall"]` Punkte mehr. Ist das nun ein großer oder kleiner Unterschied? Diese Frage kann man auf mehrere Arten beantworten: Man kann z.B. das $R^2$ betrachten oder man standardisiert (nur) die abhängige Variable. Geplottet sieht das dann so aus:
 
 ```{r}
-data_star_g3aggregated |> 
+data_star_g3sampled |> 
   ggplot(aes(g3size, scale(g3tmathss))) + 
   geom_boxplot() +
   geom_jitter() +
@@ -62,14 +62,14 @@ Man kann hier schon die Mittelwertsdifferenz in Standardabweichungen abschätzen
 Das entsprechende Regressionsmodell liefert dieses ebenfalls:
 
 ```{r}
-mod05 <- lm(scale(g3tmathss) ~ g3size, data = data_star_g3aggregated)
+mod05 <- lm(scale(g3tmathss) ~ g3size, data = data_star_g3sampled)
 summary(mod05)
 ```
 
 Die Mittelwertsdifferenz (der Slope) liegt also bei `r mod05$coefficients["g3sizesmall"]`. Dieses Wert erhält man auch wenn man Cohen's d berechnet:
 ```{r}
 library(effectsize)
-cohens_d(g3tmathss ~ g3size, data = data_star_g3aggregated)
+cohens_d(g3tmathss ~ g3size, data = data_star_g3sampled)
 ```
 
 Manchmal ergeben sich bei dieser Berechnung kleinste Unterschiede, je nach dem wie die Standardabweichungen der beiden Gruppen gemittelt (gepoolt) werden.
@@ -79,7 +79,7 @@ Manchmal ergeben sich bei dieser Berechnung kleinste Unterschiede, je nach dem w
 Möchte man die **drei** verschiedenen Gruppen des STAR-Experimentes miteinander vergleichen, setzt man in die `lm()` Funktion die trichotome Variable `g3classtype` als Prädiktor ein.
 
 ```{r}
-mod06 <- lm(g3tmathss ~ g3classtype, data = data_star_g3aggregated)
+mod06 <- lm(g3tmathss ~ g3classtype, data = data_star_g3sampled)
 summary(mod06)
 ```
 
@@ -88,7 +88,7 @@ Man erhält nun im Output zwei Prädiktoren, da die trichotome Variable zu einer
 Um bei der Interpretation keine Fehler zu machen lohnt es sich immer die Mittelwerte nochmals klassisch gegenzurechnen:
 
 ```{r}
-data_star_g3aggregated |> 
+data_star_g3sampled |> 
   group_by(g3classtype) |> 
   summarize(MWg3tmathss = mean(g3tmathss, na.rm = T))
 ```
